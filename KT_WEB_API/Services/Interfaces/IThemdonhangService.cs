@@ -8,6 +8,6 @@ namespace KT_WEB_API.Services.Interfaces
     {
         public ResponseThemdonhang Themdonhang(List<Request_Themdonhang> listdh);
         public List<ResponseGetlist<Response_GetlistlastChilProductDetail>> Getlast();
-
+        public ResponseThemdonhang Updatepd(Request_Themdonhang dh);
     }
 }

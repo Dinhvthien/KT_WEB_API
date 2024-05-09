@@ -19,6 +19,11 @@ namespace KT_WEB_API.Controllers
         {
             return Ok(_hoaDonService.Themdonhang(request));
         }
+        [HttpPost("updatesp")]
+        public IActionResult suasp(Request_Themdonhang request)
+        {
+            return Ok(_hoaDonService.Updatepd(request));
+        }
         [HttpGet]
         public IActionResult DSProductdetailchild()
         {

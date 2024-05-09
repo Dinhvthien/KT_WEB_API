@@ -23,7 +23,7 @@ namespace KT_WEB_API.DataContext
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer($"Server=DESKTOP-VVKT5NE\\SQLEXPRESS;database=KT_API;trusted_connection=true;");
+            optionsBuilder.UseSqlServer($"Server=DESKTOP-JLCKB92\\THIENCHINTE12;database=KT_API;trusted_connection=true;");
         }
     }
 }
