@@ -96,17 +96,12 @@ namespace KT_WEB_API.Services.Implements
 
                 // update cha
                 List<ProductDetails> listparent = new List<ProductDetails>();
-                while (findProductDetailChil != null)
+                var productdetailChild = _context.ProductDetails.FirstOrDefault(c => c.ProductDetailId == findProductDetailChil.ParentId);
+
+                while (productdetailChild != null)
                 {
-                    var productdetailParent = _context.ProductDetails.SingleOrDefault(c => c.ProductDetailId == findProductDetailChil.ProductDetailId);
-                    if (productdetailParent != null)
-                    {
-                        listparent.Add(productdetailParent);
-                    }
-                    else
-                    {
-                        findProductDetailChil = null;
-                    }
+                    listparent.Add(productdetailChild);
+                    productdetailChild = _context.ProductDetails.FirstOrDefault(c => c.ProductDetailId == productdetailChild.ParentId);
                 }
 
                 foreach (var upParent in listparent)
@@ -166,7 +161,7 @@ namespace KT_WEB_API.Services.Implements
             }
             
             //update chinh no
-            findProductDetailChil.Quantity += dh.Soluong;
+            findProductDetailChil.Quantity = dh.Soluong;
             _context.ProductDetails.Update(findProductDetailChil);
             // update cha
             List<ProductDetails> listparent = new List<ProductDetails>();
