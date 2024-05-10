@@ -6,6 +6,7 @@ using KT_WEB_API.Payloads.DataResponses;
 using KT_WEB_API.Payloads.Responses;
 using KT_WEB_API.Services.Interfaces;
 using System.Collections.Generic;
+using System.Xml.Schema;
 
 namespace KT_WEB_API.Services.Implements
 {
@@ -78,6 +79,8 @@ namespace KT_WEB_API.Services.Implements
                 {
                     getNamePropertys += name.PropertyDetailDetail + " ";
                 }
+
+
                 // lay ten cua producdetail
                 var NameProductDetail = getNameProductdetail + " " + getNamePropertys;
                 var findProductDetailChil = _context.ProductDetails.FirstOrDefault(c => c.ProductDetailName.Trim().ToLower().Contains(NameProductDetail.Trim().ToLower()));
@@ -90,10 +93,15 @@ namespace KT_WEB_API.Services.Implements
                 {
                     return _responsethemdonhang.ResponseError(404, $"số lượng sản phẩm {NameProductDetail} không đủ");
                 }
-                //update con
+                if (item.PropertyDetailId.Count() <= 1)
+                {
+                    return _responsethemdonhang.ResponseError(404, "Không được bán sản phẩm cha");
+                }
+
+
+                //update chinh no
                 findProductDetailChil.Quantity -= item.Soluong;
                 _context.ProductDetails.Update(findProductDetailChil);
-
                 // update cha
                 List<ProductDetails> listparent = new List<ProductDetails>();
                 var productdetailChild = _context.ProductDetails.FirstOrDefault(c => c.ProductDetailId == findProductDetailChil.ParentId);
@@ -129,6 +137,10 @@ namespace KT_WEB_API.Services.Implements
             {
                 return _responsethemdonhang.ResponseError(404, "không tìm thấy sản phẩm chi tiết");
             }
+            if (dh.Soluong <= 0)
+            {
+                return _responsethemdonhang.ResponseError(404, "số lượng sản phầm phải lớn hơn 0 ");
+            }
             if (!_context.ProductDetailPropertyDetails.Any(c => c.ProductDetailId == dh.ProductDetailId && c.PropertyDetailId == dh.PropertyDetailParentId && c.ProductId == dh.ProductId))
             {
                 return _responsethemdonhang.ResponseError(404, "Không tìm thấy ProductDetailPropertyDetails nào như vậy cả ");
@@ -154,19 +166,18 @@ namespace KT_WEB_API.Services.Implements
             // lay ten cua producdetail
             var NameProductDetail = getNameProductdetail + " " + getNamePropertys;
             var findProductDetailChil = _context.ProductDetails.FirstOrDefault(c => c.ProductDetailName.Trim().ToLower().Contains(NameProductDetail.Trim().ToLower()));
+            if (dh.PropertyDetailId.Count() <= 1)
+            {
+                return _responsethemdonhang.ResponseError(404, "Không được update sản phẩm cha");
+            }
 
             if (findProductDetailChil == null)
             {
                 return _responsethemdonhang.ResponseError(404, "Không tìm thấy sản phẩm nào như vậy cả ");
             }
-            
-            //update chinh no
-            findProductDetailChil.Quantity = dh.Soluong;
-            _context.ProductDetails.Update(findProductDetailChil);
             // update cha
             List<ProductDetails> listparent = new List<ProductDetails>();
             var productdetailChild = _context.ProductDetails.FirstOrDefault(c => c.ProductDetailId == findProductDetailChil.ParentId);
-
             while (productdetailChild != null)
             {
                 listparent.Add(productdetailChild);
@@ -175,9 +186,21 @@ namespace KT_WEB_API.Services.Implements
 
             foreach (var upParent in listparent)
             {
-                upParent.Quantity += dh.Soluong;
+                if (findProductDetailChil.Quantity < dh.Soluong)
+                {
+                    var total = dh.Soluong - findProductDetailChil.Quantity;
+                    upParent.Quantity += total;
+                }
+                else
+                {
+                    var total =  findProductDetailChil.Quantity - dh.Soluong;
+                    upParent.Quantity -= total;
+                }
                 _context.ProductDetails.Update(upParent);
             }
+            //update chinh no
+            findProductDetailChil.Quantity = dh.Soluong;
+            _context.ProductDetails.Update(findProductDetailChil);
             _context.SaveChanges();
             return _responsethemdonhang.ResponseSuccses("Update sp thanh cong");
         }
