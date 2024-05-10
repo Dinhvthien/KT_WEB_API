@@ -5,8 +5,6 @@ using KT_WEB_API.Payloads.DataRequests;
 using KT_WEB_API.Payloads.DataResponses;
 using KT_WEB_API.Payloads.Responses;
 using KT_WEB_API.Services.Interfaces;
-using System.Collections.Generic;
-using System.Xml.Schema;
 
 namespace KT_WEB_API.Services.Implements
 {
@@ -93,12 +91,11 @@ namespace KT_WEB_API.Services.Implements
                 {
                     return _responsethemdonhang.ResponseError(404, $"số lượng sản phẩm {NameProductDetail} không đủ");
                 }
-                if (item.PropertyDetailId.Count() <= 1)
+                var findPdChild = _context.ProductDetails.Where(c => c.ParentId == findProductDetailChil.ProductDetailId);
+                if (findPdChild.Any())
                 {
-                    return _responsethemdonhang.ResponseError(404, "Không được bán sản phẩm cha");
+                    return _responsethemdonhang.ResponseError(404, "Không được phép bán sản phẩm cha");
                 }
-
-
                 //update chinh no
                 findProductDetailChil.Quantity -= item.Soluong;
                 _context.ProductDetails.Update(findProductDetailChil);
@@ -166,14 +163,14 @@ namespace KT_WEB_API.Services.Implements
             // lay ten cua producdetail
             var NameProductDetail = getNameProductdetail + " " + getNamePropertys;
             var findProductDetailChil = _context.ProductDetails.FirstOrDefault(c => c.ProductDetailName.Trim().ToLower().Contains(NameProductDetail.Trim().ToLower()));
-            if (dh.PropertyDetailId.Count() <= 1)
-            {
-                return _responsethemdonhang.ResponseError(404, "Không được update sản phẩm cha");
-            }
-
             if (findProductDetailChil == null)
             {
                 return _responsethemdonhang.ResponseError(404, "Không tìm thấy sản phẩm nào như vậy cả ");
+            }
+            var findPdChild = _context.ProductDetails.Where(c => c.ParentId == findProductDetailChil.ProductDetailId);
+            if (findPdChild.Any())
+            {
+                return _responsethemdonhang.ResponseError(404, "Không được phép update sản phẩm cha");
             }
             // update cha
             List<ProductDetails> listparent = new List<ProductDetails>();
@@ -193,7 +190,7 @@ namespace KT_WEB_API.Services.Implements
                 }
                 else
                 {
-                    var total =  findProductDetailChil.Quantity - dh.Soluong;
+                    var total = findProductDetailChil.Quantity - dh.Soluong;
                     upParent.Quantity -= total;
                 }
                 _context.ProductDetails.Update(upParent);
